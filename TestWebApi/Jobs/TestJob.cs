@@ -19,6 +19,7 @@ namespace TestWebApi.Jobs
         [Job(Cron = "*/17 * * * * *")]
         public void T3()
         {
+            throw new Exception("失败");
             Console.WriteLine($"t3:{DateTime.Now}");
         }
     }

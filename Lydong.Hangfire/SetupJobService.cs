@@ -3,6 +3,7 @@ using Lydong.Hangfire.Symbols;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,8 +52,18 @@ namespace Lydong.Hangfire
         public void JobCallback(string typeFullName,string methodName)
         {
             using var scope = _spf.CreateScope();
-            var job = scope.ServiceProvider.GetServices<IJob>().Where(j => j.GetType().FullName == typeFullName).First();
-            job.GetType().GetMethod(methodName)?.Invoke(job, null);
+            var logger = scope.ServiceProvider.GetService<ILogger<SetupJobService>>();
+            try
+            {
+                var job = scope.ServiceProvider.GetServices<IJob>().Where(j => j.GetType().FullName == typeFullName).First();
+                job.GetType().GetMethod(methodName)?.Invoke(job, null);
+                logger?.LogInformation($"{typeFullName}.{methodName}执行完成");
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError($"{typeFullName}.{methodName}执行失败，{ex}");
+            }
+
         }
     }
 }
